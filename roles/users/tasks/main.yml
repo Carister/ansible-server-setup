@@ -1,0 +1,6 @@
+- name: Create a new user
+  user:
+    name: devopsuser
+    shell: /bin/bash
+    groups: sudo
+    create_home: yes

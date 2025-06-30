@@ -1,0 +1,3 @@
+- name: Set timezone to Africa/Nairobi
+  timezone:
+    name: Africa/Nairobi
