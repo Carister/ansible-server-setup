@@ -1,8 +1,17 @@
 - name: Configure Web Server
   hosts: webservers
   become: true
+
+  collections:
+    - community.mysql
+
+  vars:
+    mysql_root_password: "root"
+
   roles:
     - webserver
     - users
     - timezone
     - security
+    - pythonapp
+    - mysql

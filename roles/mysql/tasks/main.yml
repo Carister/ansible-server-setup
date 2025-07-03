@@ -1,0 +1,24 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install MySQL server package (without debconf preseed)
+  apt:
+    name: mysql-server
+    state: present
+
+- name: Ensure MySQL service is running and enabled
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set root password after install (with mysql_user module)
+  community.mysql.mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: root
+    host_all: yes
+    password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    state: present

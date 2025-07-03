@@ -1,0 +1,70 @@
+- name: Install Python3, pip, venv, and mod_wsgi
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+      - libapache2-mod-wsgi-py3
+    state: present
+    update_cache: yes
+
+- name: Create Flask app directory
+  file:
+    path: /var/www/flaskapp
+    state: directory
+
+- name: Create Python virtual environment
+  command: python3 -m venv /var/www/flaskapp/venv
+  args:
+    creates: /var/www/flaskapp/venv
+
+- name: Install Flask inside virtual environment
+  command: /var/www/flaskapp/venv/bin/pip install flask
+
+- name: Create Flask app
+  copy:
+    dest: /var/www/flaskapp/app.py
+    content: |
+      from flask import Flask
+      app = Flask(__name__)
+      @app.route('/')
+      def home():
+          return "Hello from Flask App via Apache & Ansible!"
+
+- name: Create WSGI entry file with correct venv activation
+  copy:
+    dest: /var/www/flaskapp/flaskapp.wsgi
+    content: |
+      import sys
+      import site
+
+      # Add the virtual environment site-packages to sys.path
+      site.addsitedir('/var/www/flaskapp/venv/lib/python3.12/site-packages')
+
+      # Add the app directory to sys.path
+      sys.path.insert(0, '/var/www/flaskapp')
+
+      from app import app as application
+
+- name: Add Apache site configuration for Flask
+  copy:
+    dest: /etc/apache2/sites-available/flaskapp.conf
+    content: |
+      <VirtualHost *:80>
+          ServerName localhost
+          WSGIDaemonProcess flaskapp python-home=/var/www/flaskapp/venv python-path=/var/www/flaskapp
+          WSGIScriptAlias / /var/www/flaskapp/flaskapp.wsgi
+
+          <Directory /var/www/flaskapp>
+              Require all granted
+          </Directory>
+
+          ErrorLog ${APACHE_LOG_DIR}/error.log
+          CustomLog ${APACHE_LOG_DIR}/access.log combined
+      </VirtualHost>
+
+- name: Enable the Flask site and restart Apache
+  shell: |
+    a2ensite flaskapp.conf
+    a2dissite 000-default.conf
+    systemctl restart apache2
