@@ -30,7 +30,7 @@
       @app.route('/')
       def home():
           return "Hello from Flask App via Apache & Ansible!"
-
+          
 - name: Create WSGI entry file with correct venv activation
   copy:
     dest: /var/www/flaskapp/flaskapp.wsgi
